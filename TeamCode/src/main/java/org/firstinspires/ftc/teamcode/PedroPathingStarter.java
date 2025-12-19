@@ -245,8 +245,9 @@ public class PedroPathingStarter extends OpMode {
         if (gamepad1.left_bumper) {
             intake.setPower(INTAKE_IN_POWER);
             telemetry.addData("Intake Speed /mA", "%4.2f, %4.2f", intake.getVelocity(), intake.getCurrent(CurrentUnit.MILLIAMPS));
-        } else if (gamepad1.left_trigger > 0.5) {
-            intake.setPower(INTAKE_OUT_POWER);
+        } else if (gamepad1.left_trigger > 0.1) {
+            intake.setPower(gamepad1.left_trigger);
+
             telemetry.addData("Intake Speed /mA", "%4.2f, %4.2f", intake.getVelocity(), intake.getCurrent(CurrentUnit.MILLIAMPS));
         } else {
             intake.setPower(INTAKE_OFF_POWER);
