@@ -47,6 +47,21 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import java.util.List;
+
+
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
+
 import java.util.List;
 
 
@@ -90,6 +105,7 @@ import java.util.List;
  */
 
 // Based on the sample: Basic: Omni Linear OpMode
+@Disabled
 @TeleOp(name = "TeleOp Control4", group = "Teleop")
 
 public class TeleOpControlLinearOpMode extends LinearOpMode {
@@ -145,8 +161,8 @@ public class TeleOpControlLinearOpMode extends LinearOpMode {
     static int ppPosThreshS = 0;    // Fiducial size blocked
     boolean catapultUp = true;
     
-    boolean headingfield = true;
-
+    boolean headingfield = false;
+    private Limelight3A limelight;
     /*
      * Code to run ONCE when the driver hits INIT (same as previous year's init())
      */
@@ -156,6 +172,16 @@ public class TeleOpControlLinearOpMode extends LinearOpMode {
         /*limelight = hardwareMap.get(Limelight3A.class, "limelight");*/
 
         //Limelight3A limelight = new Limelight3A(172.29.0.23);
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
+        telemetry.setMsTransmissionInterval(11);
+
+        limelight.pipelineSwitch(0);
+
+        /*
+         * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
+         */
+        limelight.start();
 
         telemetry.setMsTransmissionInterval(11);
 
@@ -274,7 +300,6 @@ public class TeleOpControlLinearOpMode extends LinearOpMode {
             telemetry.addData("Heading", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
             telemetry.addData("Field Centric?", headingfield);
            
-         
             updatePinpoint();
         
         /*LLResult result = limelight.getLatestResult();    
@@ -356,14 +381,33 @@ public class TeleOpControlLinearOpMode extends LinearOpMode {
         }
         stickX = stickX * 1.1; // Counteract imperfect strafing
 
+
         // Denominator is the largest motor power (absolute value) or 1
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        /*if (gamepad1.right_trigger>0.5){
+            LLResult result = limelight.getLatestResult();
+            Pose3D botpose = result.getBotpose();
+            YawPitchRollAngles orientation = botpose.getOrientation();
+            double limelitemeasure = orientation.getHeading(AngleUnit.RADIANS);
+            if (0<botHeading<125){
+            stickR = limelitemeasure/180;}
+            if (145<botHeading<315){
+                stickR = -(limelitemeasure-135)/180;
+            }
+            if (315<botHeading<360){
+                stickR = -(145+(360-limelitemeasure))/180;
+            }
+            stickX = 0;
+            stickY = 0;
+            leftFrontPower = (stickY + stickX + stickR);
+            leftBackPower = (stickY - stickX + stickR);
+            rightFrontPower = (stickY - stickX - stickR);
+            rightBackPower = (stickY + stickX - stickR);
+        }*/
 
-        
-
-        if (headingfield){
+            if (headingfield){
 
             double rotX = stickX * Math.cos(-botHeading) - stickY * Math.sin(-botHeading);
             double rotY = stickX * Math.sin(-botHeading) + stickY * Math.cos(-botHeading);
@@ -503,6 +547,7 @@ public class TeleOpControlLinearOpMode extends LinearOpMode {
             // UPDATE TELEMETRY
             // Show the elapsed game time, wheel power, and other systems power
             telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Stick X/Y/R", "%4.2f, %4.2f, %4.2f", stickX, stickY, stickR);
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Intake", "%%4.2f, %%4.2fmA", intake.getPower(), intake.getCurrent(CurrentUnit.MILLIAMPS));

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
@@ -9,7 +10,8 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.drawOnlyCurrent
 import com.pedropathing.paths.PathChain;
 import org.firstinspires.ftc.teamcode.pedroPathing.PathFactory;
 
-@Autonomous(name = "AS-autobot1", group = "Concept")
+@Disabled
+@Autonomous(name = "AS-auto-circle", group = "Concept")
 public class AutoBot extends LinearOpMode {
 
     @Override
