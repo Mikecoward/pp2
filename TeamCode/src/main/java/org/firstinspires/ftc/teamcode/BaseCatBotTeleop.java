@@ -54,8 +54,8 @@ public abstract class BaseCatBotTeleop extends OpMode {
             new Pose(25.1, 129.3, Math.toRadians(144)), // 0 Blue Start Pose
             new Pose(24.7, 121.5, Math.toRadians(144)), // 1 Blue Scoring Pose
             new Pose(40,   34,    Math.toRadians(-131)),// 2 Blue Parking Pose
-            new Pose(48,   90,    Math.toRadians(-180)),// 3 Blue Auto A Start
-            new Pose(30,   90,    Math.toRadians(-180)) // 4 Blue Auto A End
+            new Pose(120,   120,    Math.toRadians(-180)),// 3 Blue Pickup Pose
+            new Pose(30,   90,    Math.toRadians(-180)) //
     };
 
     // Alliance-specific poses (computed at init)
@@ -66,7 +66,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
         STARTING(0),
         SCORING(1),
         PARKING(2),
-        AUTO_A_START(3),
+        PICKUP(3),
         AUTO_A_END(4);
 
         public final int value;
@@ -110,7 +110,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
         }
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poseArray[AutoTarget.STARTING.value]);
+        //follower.setStartingPose(poseArray[AutoTarget.STARTING.value]);
         follower.update();
 
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -209,13 +209,13 @@ public abstract class BaseCatBotTeleop extends OpMode {
             currentAutoTarget = AutoTarget.NONE;
         }
 
-        // X -> auto A start
+        // X -> pickup
         if (gamepad1.xWasPressed() && !automatedDrive) {
-            follower.followPath(pathArray[AutoTarget.AUTO_A_START.value].get());
+            follower.followPath(pathArray[AutoTarget.PICKUP.value].get());
             automatedDrive = true;
-            currentAutoTarget = AutoTarget.AUTO_A_START;
+            currentAutoTarget = AutoTarget.PICKUP;
         }
-        if (!gamepad1.x && automatedDrive && currentAutoTarget == AutoTarget.AUTO_A_START) {
+        if (!gamepad1.x && automatedDrive && currentAutoTarget == AutoTarget.PICKUP) {
             follower.startTeleopDrive();
             automatedDrive = false;
             currentAutoTarget = AutoTarget.NONE;
@@ -293,8 +293,10 @@ public abstract class BaseCatBotTeleop extends OpMode {
         Pose llPose = getRobotPoseFromCamera();
         if (llPose != null) {
             telemetry.addLine("LL Data Valid");
-            if (gamepad1.leftBumperWasPressed()) {
+            if (gamepad1.back) {
                 follower.setPose(llPose);
+                telemetry.addData("Set Pose from LL X/Y/H", "%4.2f, %4.2f, %4.1f°",
+                        llPose.getX(), llPose.getY(), Math.toDegrees(llPose.getHeading()));
             } else {
                 telemetry.addData("LL X/Y/H", "%4.2f, %4.2f, %4.1f°",
                         llPose.getX(), llPose.getY(), Math.toDegrees(llPose.getHeading()));
