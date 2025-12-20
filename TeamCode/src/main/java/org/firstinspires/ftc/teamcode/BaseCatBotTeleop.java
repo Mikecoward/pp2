@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode.pedroPathing;
+package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+//import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -16,6 +16,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -113,7 +115,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
         //follower.setStartingPose(poseArray[AutoTarget.STARTING.value]);
         follower.update();
 
-        telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+        //telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         pathArray = new Supplier[numPaths];
         for (int i = 0; i < numPaths; i++) {
@@ -130,7 +132,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
                     .build();
         }
 
-        Drawing.init();
+       // Drawing.init();
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
@@ -162,10 +164,10 @@ public abstract class BaseCatBotTeleop extends OpMode {
     public void loop() {
         follower.update();
         updatePoseFromLL();
-        Drawing.drawDebug(follower);
+        //Drawing.drawDebug(follower);
 
         telemetry.addData("Alliance", getAlliance());
-        telemetryM.update();
+        //telemetryM.update();
 
         if (!automatedDrive) {
             double targetY    = gamepad1.right_stick_y * Math.pow(Math.abs(gamepad1.right_stick_y), 1.2);
@@ -263,10 +265,10 @@ public abstract class BaseCatBotTeleop extends OpMode {
                 odomPose.getX(), odomPose.getY(), Math.toDegrees(odomPose.getHeading()));
 
         telemetry.addData("Foot", footPosition);
-        telemetryM.debug("position", follower.getPose());
-        telemetryM.debug("velocity", follower.getVelocity());
-        telemetryM.debug("automatedDrive", automatedDrive);
-        telemetryM.debug("autoTarget", currentAutoTarget);
+        //telemetryM.debug("position", follower.getPose());
+        //telemetryM.debug("velocity", follower.getVelocity());
+        //telemetryM.debug("automatedDrive", automatedDrive);
+        //telemetryM.debug("autoTarget", currentAutoTarget);
         telemetry.update();
     }
 

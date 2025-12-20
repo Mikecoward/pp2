@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode.pedroPathing;
+package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+//import org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -20,6 +20,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+//import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
 
 @Configurable
 public abstract class BaseCatBotAuto extends OpMode {
@@ -134,10 +136,10 @@ public abstract class BaseCatBotAuto extends OpMode {
         follower.setStartingPose(poseArray[AutoTarget.STARTING.idx]);
         follower.update();
 
-        telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+        //telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         buildPaths();
-        Drawing.init();
+        //Drawing.init();
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
@@ -169,12 +171,12 @@ public abstract class BaseCatBotAuto extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        Drawing.drawDebug(follower);
+        //Drawing.drawDebug(follower);
 
         telemetry.addData("Alliance", getAlliance());
         telemetry.addData("state", state);
 
-        telemetryM.update();
+        //telemetryM.update();
         scheduler.update(getRuntime());
 
         switch (state) {
@@ -310,10 +312,10 @@ public abstract class BaseCatBotAuto extends OpMode {
         }
 
         telemetry.addData("Foot", footPosition);
-        telemetryM.debug("position", follower.getPose());
-        telemetryM.debug("velocity", follower.getVelocity());
-        telemetryM.debug("automatedDrive", automatedDrive);
-        telemetryM.debug("autoTarget", currentAutoTarget);
+        //telemetryM.debug("position", follower.getPose());
+        //telemetryM.debug("velocity", follower.getVelocity());
+        //telemetryM.debug("automatedDrive", automatedDrive);
+        //telemetryM.debug("autoTarget", currentAutoTarget);
         telemetry.update();
     }
 
