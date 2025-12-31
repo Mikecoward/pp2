@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 
 
 @Configurable
-public abstract class BaseCatBotAuto extends OpMode {
+public abstract class basecatbotAuto2 extends OpMode {
 
     public enum Alliance { BLUE, RED }
 
@@ -49,7 +49,7 @@ public abstract class BaseCatBotAuto extends OpMode {
     protected AutoTarget currentAutoTarget = AutoTarget.NONE;
 
     // FIX: you index up to 18, so this must be >= 19
-    protected int numPaths = 19;
+    protected int numPaths = 2;
     protected double speedfactor = 0.20;
     protected PathChain[] pathChains;
 
@@ -57,22 +57,8 @@ public abstract class BaseCatBotAuto extends OpMode {
     // These are your BLUE poses (source of truth). RED is derived by mirroring.
     // Your snippet is missing poses for indices 10 and 11. Fill them in.
     protected static final Pose[] poseArrayBlue = {
-            new Pose(25.1, 129.3, Math.toRadians(144)),   // 0 Blue Start Pose
-            new Pose(29, 121.2 , Math.toRadians(144)),  // 1 Blue Scoring Pose
-            new Pose(40,   34,    Math.toRadians(-131)),  // 2 Blue Parking Pose
-            new Pose(44,   88,    Math.toRadians(180)),   // 3 Blue intake A start
-            new Pose(20,   88,    Math.toRadians(180)),   // 4 Blue intake A end
-            new Pose(44,   65,    Math.toRadians(180)),   // 5 Blue intake B start
-            new Pose(20,   65,    Math.toRadians(180)),   // 6 Blue intake B end
-            new Pose(44,   40,    Math.toRadians(180)),   // 7 Blue intake C start
-            new Pose(20,   40,    Math.toRadians(180)),   // 8 Blue intake C end
-            new Pose(44,   105,   Math.toRadians(180)),   // 9 Line segment intermediate
-
-            // TODO: YOU MUST ADD THESE (your enum references 10 and 11)
-            // 10 Gate Start
-            new Pose(0, 0, 0),
-            // 11 Gate End
-            new Pose(0, 0, 0),
+            new Pose(96, 9, Math.toRadians(90)),   // 0 Blue Start Pose
+            new Pose(105, 9 , Math.toRadians(90)),  // 1 Dummy Position
     };
 
     // Runtime pose array for the selected alliance
@@ -81,20 +67,7 @@ public abstract class BaseCatBotAuto extends OpMode {
     protected enum AutoTarget {
         NONE(-1),
         STARTING(0),
-        SCORING(1),
-        PARKING(2),
-
-        AUTO_A_START(3),
-        AUTO_A_END(4),
-        AUTO_B_START(5),
-        AUTO_B_END(6),
-        AUTO_C_START(7),
-        AUTO_C_END(8),
-        AUTO_LINE_SEG(9),
-
-        AUTO_GATE_START(10),
-        AUTO_GATE_END(11);
-
+        DUMMY(1);
         public final int idx;
         AutoTarget(int idx) { this.idx = idx; }
     }
@@ -132,10 +105,6 @@ public abstract class BaseCatBotAuto extends OpMode {
         poseArray = new Pose[poseArrayBlue.length];
         for (int i = 0; i < poseArrayBlue.length; i++) {
             poseArray[i] = (alliance == Alliance.BLUE) ? poseArrayBlue[i] : mirrorBlueToRed(poseArrayBlue[i]);
-            if (alliance == Alliance.RED && i==0) {
-                poseArray[i] = new Pose(121, 129.3, Math.toRadians(36));   // Red Start Pose
-            } else
-                poseArray[i] = (alliance == Alliance.BLUE) ? poseArrayBlue[i] : mirrorBlueToRed(poseArrayBlue[i]);
         }
 
         follower = Constants.createFollower(hardwareMap);
@@ -189,131 +158,10 @@ public abstract class BaseCatBotAuto extends OpMode {
         switch (state) {
             case 0:
                 follower.followPath(pathChains[0], true);
-                state = 1;
+                state = 100;
                 break;
-
-            case 1:
-                if (!follower.isBusy()) {
-                    shootCatapultnew();
-                    scheduler.atSec(getRuntime() + 0.5, this::setstate2);
-                    state = 100;
-                }
+            case 100:  // Sit here and wait
                 break;
-
-            case 2:
-                follower.followPath(pathChains[10], true);
-                state = 31;
-                break;
-
-            case 31:
-                if (!follower.isBusy()) {
-                    follower.followPath(pathChains[11], true);
-                    state = 3;
-                }
-                break;
-
-            case 3:
-                if (!follower.isBusy()) {
-                    intakeIn();
-                    follower.followPath(pathChains[2], speedfactor, true);
-                    state = 4;
-                }
-                break;
-
-            case 4:
-                if (!follower.isBusy()) {
-                    scheduler.atSec(getRuntime() + 2, this::intakeOff);
-                    follower.followPath(pathChains[16], true);
-                    state = 5;
-                }
-                break;
-
-            case 5:
-                if (!follower.isBusy()) {
-                    shootCatapultnew();
-                    scheduler.atSec(getRuntime() + 0.5, this::setstate6);
-                    state = 100;
-                }
-                break;
-
-            case 6:
-                follower.followPath(pathChains[10], true);
-                state = 71;
-                break;
-
-            case 71:
-                if (!follower.isBusy()) {
-                    follower.followPath(pathChains[12], true);
-                    state = 7;
-                }
-                break;
-
-            case 7:
-                if (!follower.isBusy()) {
-                    intakeIn();
-                    follower.followPath(pathChains[5], speedfactor, true);
-                    state = 8;
-                }
-                break;
-
-            case 8:
-                if (!follower.isBusy()) {
-                    scheduler.atSec(getRuntime() + 2, this::intakeOff);
-                    follower.followPath(pathChains[14], true);
-                    state = 81;
-                }
-                break;
-
-            case 81:
-                if (!follower.isBusy()) {
-                    follower.followPath(pathChains[6], true);
-                    state = 9;
-                }
-                break;
-
-            case 9:
-                if (!follower.isBusy()) {
-                    shootCatapultnew();
-                    scheduler.atSec(getRuntime() + 0.5, this::setstate10);
-                    state = 100;
-                }
-                break;
-
-            case 10:
-                follower.followPath(pathChains[10], true);
-                state = 101;
-                break;
-
-            case 101:
-                if (!follower.isBusy()) {
-                    follower.followPath(pathChains[13], true);
-                    state = 11;
-                }
-                break;
-
-            case 11:
-                if (!follower.isBusy()) {
-                    intakeIn();
-                    follower.followPath(pathChains[8], speedfactor, true);
-                    state = 12;
-                }
-                break;
-
-            case 12:
-                if (!follower.isBusy()) {
-                    scheduler.atSec(getRuntime() + 2, this::intakeOff);
-                    follower.followPath(pathChains[15], true);
-                    state = 100;
-                }
-                break;
-
-            case 13:
-                if (!follower.isBusy()) {
-                    follower.followPath(pathChains[9], true);
-                    state = 14;
-                }
-                break;
-
             default:
                 break;
         }
@@ -387,30 +235,7 @@ public abstract class BaseCatBotAuto extends OpMode {
     protected void buildPaths() {
         pathChains = new PathChain[numPaths];
 
-        pathChains[0]  = simplePathChain(AutoTarget.STARTING.idx,     AutoTarget.SCORING.idx,     0.8);
-        pathChains[1]  = simplePathChain(AutoTarget.SCORING.idx,      AutoTarget.AUTO_A_START.idx,0.4);
-        pathChains[2]  = simplePathChain(AutoTarget.AUTO_A_START.idx, AutoTarget.AUTO_A_END.idx,  0.8);
-        pathChains[3]  = simplePathChain(AutoTarget.AUTO_A_END.idx,   AutoTarget.SCORING.idx,     0.8);
-
-        pathChains[4]  = simplePathChain(AutoTarget.SCORING.idx,      AutoTarget.AUTO_B_START.idx,0.4);
-        pathChains[5]  = simplePathChain(AutoTarget.AUTO_B_START.idx, AutoTarget.AUTO_B_END.idx,  0.8);
-        pathChains[6]  = simplePathChain(AutoTarget.AUTO_B_START.idx, AutoTarget.SCORING.idx,     0.8);
-
-        pathChains[7]  = simplePathChain(AutoTarget.SCORING.idx,      AutoTarget.AUTO_C_START.idx,0.4);
-        pathChains[8]  = simplePathChain(AutoTarget.AUTO_C_START.idx, AutoTarget.AUTO_C_END.idx,  0.8);
-        pathChains[9]  = simplePathChain(AutoTarget.AUTO_C_START.idx, AutoTarget.AUTO_GATE_START.idx,     0.8);
-
-        pathChains[10] = simplePathChain(AutoTarget.SCORING.idx,      AutoTarget.AUTO_LINE_SEG.idx,0.8);
-        pathChains[11] = simplePathChain(AutoTarget.AUTO_LINE_SEG.idx,AutoTarget.AUTO_A_START.idx, 0.8);
-        pathChains[12] = simplePathChain(AutoTarget.AUTO_LINE_SEG.idx,AutoTarget.AUTO_B_START.idx, 0.8);
-        pathChains[13] = simplePathChain(AutoTarget.AUTO_LINE_SEG.idx,AutoTarget.AUTO_C_START.idx, 0.8);
-
-        pathChains[14] = simplePathChain(AutoTarget.AUTO_B_END.idx,   AutoTarget.AUTO_B_START.idx, 0.8);
-        pathChains[15] = simplePathChain(AutoTarget.AUTO_C_END.idx,   AutoTarget.AUTO_GATE_START.idx, 0.8);
-        pathChains[16] = simplePathChain(AutoTarget.AUTO_A_END.idx,   AutoTarget.SCORING.idx,      0.8);
-
-        pathChains[17] = simplePathChain(AutoTarget.AUTO_GATE_START.idx, AutoTarget.AUTO_GATE_END.idx, 0.8);
-        pathChains[18] = simplePathChain(AutoTarget.AUTO_GATE_END.idx,   AutoTarget.SCORING.idx,       0.8);
+        pathChains[0]  = simplePathChain(AutoTarget.STARTING.idx,     AutoTarget.DUMMY.idx,     0.8);
     }
 
     protected PathChain simplePathChain(int start, int end, double headingTime) {

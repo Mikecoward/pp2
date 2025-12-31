@@ -47,16 +47,16 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected Follower follower;
     protected boolean automatedDrive;
     protected AutoTarget currentAutoTarget = AutoTarget.NONE;
-
+    boolean centric = false;
     protected int numPaths = 5;
     protected Supplier<PathChain>[] pathArray;
 
     // BLUE “source of truth”
     protected static final Pose[] poseArrayBlue = {
             new Pose(25.1, 129.3, Math.toRadians(144)), // 0 Blue Start Pose
-            new Pose(24.7, 121.5, Math.toRadians(144)), // 1 Blue Scoring Pose
-            new Pose(40,   34,    Math.toRadians(-131)),// 2 Blue Parking Pose
-            new Pose(120,   120,    Math.toRadians(-180)),// 3 Blue Pickup Pose
+            new Pose(29, 121.5, Math.toRadians(144)), // 1 Blue Scoring Pose
+            new Pose(104 ,   34,    Math.toRadians(-131)),// 2 Blue Parking Pose
+            new Pose(144-16,   16,    Math.toRadians(-180)),// 3 Blue Pickup Pose
             new Pose(30,   90,    Math.toRadians(-180)) //
     };
 
@@ -84,7 +84,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected double cmdX = 0.0;
     protected double cmdY = 0.0;
     protected double cmdTurn = 0.0;
-    protected static final double JOYSTICK_SLEW = 0.05;
+    protected static final double JOYSTICK_SLEW = 1;
 
     // End-effector
     protected DcMotorEx intake = null;
@@ -112,7 +112,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
         }
 
         follower = Constants.createFollower(hardwareMap);
-        //follower.setStartingPose(poseArray[AutoTarget.STARTING.value]);
+        follower.setStartingPose(PoseStorage.currentPose);
         follower.update();
 
         //telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -166,24 +166,41 @@ public abstract class BaseCatBotTeleop extends OpMode {
         updatePoseFromLL();
         //Drawing.drawDebug(follower);
 
-        telemetry.addData("Alliance", getAlliance());
+        telemetry.addData("Alliance", getAlliance() == Alliance.BLUE ? "Blue" : "Red");
         //telemetryM.update();
 
         if (!automatedDrive) {
-            double targetY    = gamepad1.right_stick_y * Math.pow(Math.abs(gamepad1.right_stick_y), 1.2);
-            double targetX    = gamepad1.right_stick_x * Math.pow(Math.abs(gamepad1.right_stick_x), 1.2);
-            double targetTurn = gamepad1.left_stick_x  * Math.pow(Math.abs(gamepad1.left_stick_x),  1.5);
+            double targetY    = gamepad1.right_stick_y * Math.pow(Math.abs(gamepad1.right_stick_y), 1.5);
+            double targetX    = gamepad1.right_stick_x * Math.pow(Math.abs(gamepad1.right_stick_x), 1.5);
+            double targetTurn = gamepad1.left_stick_x  * Math.pow(Math.abs(gamepad1.left_stick_x),  1.5) / 1.5;
 
             cmdY    += clamp(targetY    - cmdY,    -JOYSTICK_SLEW, JOYSTICK_SLEW);
             cmdX    += clamp(targetX    - cmdX,    -JOYSTICK_SLEW, JOYSTICK_SLEW);
             cmdTurn += clamp(targetTurn - cmdTurn, -JOYSTICK_SLEW, JOYSTICK_SLEW);
 
             double mult = slowMode ? slowModeMultiplier : 1.0;
+
+            if (gamepad1.startWasPressed()){
+                centric = !centric;
+
+            }
+            if (centric){
+                telemetry.addLine("Robot Centric");
+
+            }
+            else{
+                telemetry.addLine("Field Centric");
+                if( getAlliance() == Alliance.BLUE ){
+                    cmdX = -cmdX;
+                    cmdY = -cmdY;
+
+                }
+            }
             follower.setTeleOpDrive(
                     -cmdY * mult,
                     -cmdX * mult,
                     -cmdTurn * mult,
-                    true // Robot centric (as you had)
+                    centric // Robot centric (as you had)
             );
         }
 
