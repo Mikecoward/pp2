@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 //import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -47,7 +46,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected Follower follower;
     protected boolean automatedDrive;
     protected AutoTarget currentAutoTarget = AutoTarget.NONE;
-    boolean centric = false;
+    boolean robotCentric = false;
     protected int numPaths = 5;
     protected Supplier<PathChain>[] pathArray;
 
@@ -78,6 +77,11 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected boolean slowMode = false;
     protected double slowModeMultiplier = 0.5;
 
+    // Speed cap for all drive movements (0.0 to 1.0)
+    protected double driveSpeedCap = 0.5;
+    // Demo mode - disables A/B/X/Y automated drive buttons
+    protected boolean demoMode = true;
+
     protected Limelight3A limelight;
 
     // Smooth command state
@@ -95,8 +99,8 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected double INTAKE_IN_POWER = -1;
     protected double INTAKE_OFF_POWER = 0.0;
 
-    protected double CATAPULT_UP_POWER = -1;
-    protected double CATAPULT_DOWN_POWER = 1;
+    protected double CATAPULT_UP_POWER = 1;
+    protected double CATAPULT_DOWN_POWER = -1;
     protected double CATAPULT_HOLD_DOWN_POWER = 0.0;
 
     protected double footPosition = 0.0;
@@ -112,7 +116,11 @@ public abstract class BaseCatBotTeleop extends OpMode {
         }
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(PoseStorage.currentPose);
+        if (!demoMode) {
+            follower.setStartingPose(PoseStorage.currentPose);
+        } else {
+            follower.setStartingPose(new Pose(0,0, Math.toRadians(90)));
+        }
         follower.update();
 
         //telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -179,77 +187,37 @@ public abstract class BaseCatBotTeleop extends OpMode {
             cmdTurn += clamp(targetTurn - cmdTurn, -JOYSTICK_SLEW, JOYSTICK_SLEW);
 
             double mult = slowMode ? slowModeMultiplier : 1.0;
+            mult *= driveSpeedCap; // Apply speed cap to all movements
 
             if (gamepad1.startWasPressed()){
-                centric = !centric;
+                robotCentric = !robotCentric;
 
             }
-            if (centric){
+            if (robotCentric){  // Robot Centric
                 telemetry.addLine("Robot Centric");
 
             }
-            else{
+            else{ // Field Centric
                 telemetry.addLine("Field Centric");
                 if( getAlliance() == Alliance.BLUE ){
                     cmdX = -cmdX;
                     cmdY = -cmdY;
-
                 }
             }
             follower.setTeleOpDrive(
                     -cmdY * mult,
                     -cmdX * mult,
                     -cmdTurn * mult,
-                    centric // Robot centric (as you had)
+                    robotCentric
             );
         }
 
-        // A -> scoring
-        if (gamepad1.aWasPressed() && !automatedDrive) {
-            follower.followPath(pathArray[AutoTarget.SCORING.value].get());
-            automatedDrive = true;
-            currentAutoTarget = AutoTarget.SCORING;
-        }
-        if (!gamepad1.a && automatedDrive && currentAutoTarget == AutoTarget.SCORING) {
-            follower.startTeleopDrive();
-            automatedDrive = false;
-            currentAutoTarget = AutoTarget.NONE;
-        }
-
-        // B -> parking
-        if (gamepad1.bWasPressed() && !automatedDrive) {
-            follower.followPath(pathArray[AutoTarget.PARKING.value].get());
-            automatedDrive = true;
-            currentAutoTarget = AutoTarget.PARKING;
-        }
-        if (!gamepad1.b && automatedDrive && currentAutoTarget == AutoTarget.PARKING) {
-            follower.startTeleopDrive();
-            automatedDrive = false;
-            currentAutoTarget = AutoTarget.NONE;
-        }
-
-        // X -> pickup
-        if (gamepad1.xWasPressed() && !automatedDrive) {
-            follower.followPath(pathArray[AutoTarget.PICKUP.value].get());
-            automatedDrive = true;
-            currentAutoTarget = AutoTarget.PICKUP;
-        }
-        if (!gamepad1.x && automatedDrive && currentAutoTarget == AutoTarget.PICKUP) {
-            follower.startTeleopDrive();
-            automatedDrive = false;
-            currentAutoTarget = AutoTarget.NONE;
-        }
-
-        // Y -> auto A end
-        if (gamepad1.yWasPressed() && !automatedDrive) {
-            follower.followPath(pathArray[AutoTarget.AUTO_A_END.value].get());
-            automatedDrive = true;
-            currentAutoTarget = AutoTarget.AUTO_A_END;
-        }
-        if (!gamepad1.y && automatedDrive && currentAutoTarget == AutoTarget.AUTO_A_END) {
-            follower.startTeleopDrive();
-            automatedDrive = false;
-            currentAutoTarget = AutoTarget.NONE;
+        // A/B/X/Y automated drive buttons (disabled in demo mode)
+        if (!demoMode) {
+            handleAutoTarget(gamepad1.aWasPressed(), gamepad1.a, AutoTarget.SCORING);   // A -> scoring
+            handleAutoTarget(gamepad1.bWasPressed(), gamepad1.b, AutoTarget.PARKING);   // B -> parking
+            handleAutoTarget(gamepad1.xWasPressed(), gamepad1.x, AutoTarget.PICKUP);    // X -> pickup
+            handleAutoTarget(gamepad1.yWasPressed(), gamepad1.y, AutoTarget.AUTO_A_END); // Y -> auto A end
         }
 
         if (gamepad1.rightBumperWasPressed()) {
@@ -268,13 +236,16 @@ public abstract class BaseCatBotTeleop extends OpMode {
             intake.setPower(INTAKE_OFF_POWER);
         }
 
-        if (gamepad1.dpad_down) {
-            footPosition = FOOT_DOWN_POSITION;
-            foot.setPosition(footPosition);
-        }
-        if (gamepad1.dpad_up) {
-            footPosition = FOOT_UP_POSITION;
-            foot.setPosition(footPosition);
+        // Foot servo controls (disabled in demo mode)
+        if (!demoMode) {
+            if (gamepad1.dpad_down) {
+                footPosition = FOOT_DOWN_POSITION;
+                foot.setPosition(footPosition);
+            }
+            if (gamepad1.dpad_up) {
+                footPosition = FOOT_UP_POSITION;
+                foot.setPosition(footPosition);
+            }
         }
 
         Pose odomPose = follower.getPose();
@@ -343,5 +314,26 @@ public abstract class BaseCatBotTeleop extends OpMode {
 
     protected double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    /**
+     * Handle automated drive to target when button is pressed/released.
+     * @param buttonWasPressed true if button was just pressed
+     * @param buttonIsHeld true if button is currently held
+     * @param target the AutoTarget to drive to
+     */
+    protected void handleAutoTarget(boolean buttonWasPressed, boolean buttonIsHeld, AutoTarget target) {
+        // Start automated drive when button pressed
+        if (buttonWasPressed && !automatedDrive) {
+            follower.followPath(pathArray[target.value].get());
+            automatedDrive = true;
+            currentAutoTarget = target;
+        }
+        // Stop automated drive when button released
+        if (!buttonIsHeld && automatedDrive && currentAutoTarget == target) {
+            follower.startTeleopDrive();
+            automatedDrive = false;
+            currentAutoTarget = AutoTarget.NONE;
+        }
     }
 }

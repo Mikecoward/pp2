@@ -18,6 +18,8 @@ public class Constants {
             .mass(11.6)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.02))
             .headingPIDFCoefficients(new PIDFCoefficients(1, 0, 0.02, 0.02))
+            .forwardZeroPowerAcceleration(-33.1)
+            .lateralZeroPowerAcceleration(-73.01)
             ;
     ;
     public static MecanumConstants driveConstants = new MecanumConstants()
@@ -33,8 +35,7 @@ public class Constants {
             .xVelocity(63.73)
             .yVelocity(49.5)
             .useBrakeModeInTeleOp(true)
-            //.forwardZeroPowerAcceleration(-33.1)
-            //.lateralZeroPowerAcceleration(-73.01)
+
             ;
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
