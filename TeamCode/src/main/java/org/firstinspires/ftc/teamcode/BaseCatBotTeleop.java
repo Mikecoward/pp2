@@ -80,7 +80,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
     // Speed cap for all drive movements (0.0 to 1.0)
     protected double driveSpeedCap = 0.5;
     // Demo mode - disables A/B/X/Y automated drive buttons
-    protected boolean demoMode = true;
+    protected boolean demoMode = false;
 
     protected Limelight3A limelight;
 
@@ -94,7 +94,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected DcMotorEx intake = null;
     protected DcMotorEx catapult1 = null;
     protected DcMotorEx catapult2 = null;
-    protected Servo foot = null;
+    protected Servo catstrength = null;
 
     protected double INTAKE_IN_POWER = -1;
     protected double INTAKE_OFF_POWER = 0.0;
@@ -103,9 +103,12 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected double CATAPULT_DOWN_POWER = -1;
     protected double CATAPULT_HOLD_DOWN_POWER = 0.0;
 
-    protected double footPosition = 0.0;
-    protected double FOOT_UP_POSITION = 0.2;
-    protected double FOOT_DOWN_POSITION = 0.35;
+    protected double catstrengthPosition = 0.75;
+    protected static final double CATSTRENGTH_MIN_POSITION = 0.25;
+    protected static final double CATSTRENGTH_MAX_POSITION = 0.75;
+    protected static final double CATSTRENGTH_INCREMENT = 0.01;
+    protected boolean dpadUpPressed = false;
+    protected boolean dpadDownPressed = false;
 
     @Override
     public void init() {
@@ -158,9 +161,9 @@ public abstract class BaseCatBotTeleop extends OpMode {
         catapult1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         catapult2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        foot = hardwareMap.get(Servo.class, "foot");
-        footPosition = FOOT_UP_POSITION;
-        foot.setPosition(footPosition);
+        catstrength = hardwareMap.get(Servo.class, "catstrength");
+        catstrengthPosition = 0.75;
+        catstrength.setPosition(catstrengthPosition);
     }
 
     @Override
@@ -236,15 +239,30 @@ public abstract class BaseCatBotTeleop extends OpMode {
             intake.setPower(INTAKE_OFF_POWER);
         }
 
-        // Foot servo controls (disabled in demo mode)
+        // Catstrength servo controls (disabled in demo mode)
         if (!demoMode) {
-            if (gamepad1.dpad_down) {
-                footPosition = FOOT_DOWN_POSITION;
-                foot.setPosition(footPosition);
+            // DPad Up - Increase position
+            if (gamepad1.dpad_up && !dpadUpPressed) {
+                catstrengthPosition += CATSTRENGTH_INCREMENT;
+                if (catstrengthPosition > CATSTRENGTH_MAX_POSITION) {
+                    catstrengthPosition = CATSTRENGTH_MAX_POSITION;
+                }
+                catstrength.setPosition(catstrengthPosition);
+                dpadUpPressed = true;
+            } else if (!gamepad1.dpad_up) {
+                dpadUpPressed = false;
             }
-            if (gamepad1.dpad_up) {
-                footPosition = FOOT_UP_POSITION;
-                foot.setPosition(footPosition);
+
+            // DPad Down - Decrease position
+            if (gamepad1.dpad_down && !dpadDownPressed) {
+                catstrengthPosition -= CATSTRENGTH_INCREMENT;
+                if (catstrengthPosition < CATSTRENGTH_MIN_POSITION) {
+                    catstrengthPosition = CATSTRENGTH_MIN_POSITION;
+                }
+                catstrength.setPosition(catstrengthPosition);
+                dpadDownPressed = true;
+            } else if (!gamepad1.dpad_down) {
+                dpadDownPressed = false;
             }
         }
 
@@ -252,7 +270,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
         telemetry.addData("PP X/Y/H", "%4.2f, %4.2f, %4.1f°",
                 odomPose.getX(), odomPose.getY(), Math.toDegrees(odomPose.getHeading()));
 
-        telemetry.addData("Foot", footPosition);
+        telemetry.addData("Catstrength", "%.2f", catstrengthPosition);
         //telemetryM.debug("position", follower.getPose());
         //telemetryM.debug("velocity", follower.getVelocity());
         //telemetryM.debug("automatedDrive", automatedDrive);
