@@ -23,7 +23,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-
 import java.util.function.Supplier;
 
 @Configurable
@@ -44,6 +43,8 @@ public abstract class BaseCatBotTeleop extends OpMode {
 
     // --- Original members ---
     protected Follower follower;
+    int upperlimit = 4500;
+    int lowerlimit = -4500;
     protected boolean automatedDrive;
     protected AutoTarget currentAutoTarget = AutoTarget.NONE;
     boolean robotCentric = false;
@@ -58,7 +59,8 @@ public abstract class BaseCatBotTeleop extends OpMode {
             new Pose(144-16,   16,    Math.toRadians(-180)),// 3 Blue Pickup Pose
             new Pose(30,   90,    Math.toRadians(-180)) //
     };
-
+    protected int lifterTargetPosition = 0;
+    protected static final int LIFTER_INCREMENT_TICKS = 25;
     // Alliance-specific poses (computed at init)
     protected Pose[] poseArray;
 
@@ -95,6 +97,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected DcMotorEx catapult1 = null;
     protected DcMotorEx catapult2 = null;
     protected Servo catstrength = null;
+    protected DcMotorEx lifter = null;
 
     protected double INTAKE_IN_POWER = -1;
     protected double INTAKE_OFF_POWER = 0.0;
@@ -109,6 +112,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
     protected static final double CATSTRENGTH_INCREMENT = 0.01;
     protected boolean dpadUpPressed = false;
     protected boolean dpadDownPressed = false;
+
 
     @Override
     public void init() {
@@ -164,7 +168,18 @@ public abstract class BaseCatBotTeleop extends OpMode {
         catstrength = hardwareMap.get(Servo.class, "catstrength");
         catstrengthPosition = 0.75;
         catstrength.setPosition(catstrengthPosition);
-    }
+
+        lifter = hardwareMap.get(DcMotorEx.class, "lifter");
+
+        lifter.setDirection(DcMotor.Direction.FORWARD);
+        lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+// Reset encoder
+        lifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lifter.setTargetPosition(0);
+        lifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lifter.setPower(0.7);}
 
     @Override
     public void start() {
@@ -264,6 +279,22 @@ public abstract class BaseCatBotTeleop extends OpMode {
             } else if (!gamepad1.dpad_down) {
                 dpadDownPressed = false;
             }
+
+            // DPad Right - Increase lifter position
+            if (gamepad1.dpad_right) {
+                lifterTargetPosition += LIFTER_INCREMENT_TICKS;
+                ///lifterTargetPosition = upperlimit;
+            }
+
+            if (gamepad1.dpad_left) {
+                lifterTargetPosition -= LIFTER_INCREMENT_TICKS;
+                ///lifterTargetPosition = lowerlimit;
+            }
+            lifterTargetPosition = Math.max(lifterTargetPosition,  lowerlimit);
+            lifterTargetPosition = Math.min(lifterTargetPosition,  upperlimit);
+
+
+            lifter.setTargetPosition(lifterTargetPosition);
         }
 
         Pose odomPose = follower.getPose();
@@ -271,6 +302,10 @@ public abstract class BaseCatBotTeleop extends OpMode {
                 odomPose.getX(), odomPose.getY(), Math.toDegrees(odomPose.getHeading()));
 
         telemetry.addData("Catstrength", "%.2f", catstrengthPosition);
+        telemetry.addData("Lifter Encoder", lifter.getCurrentPosition());
+        telemetry.addData("Lifter Target", lifterTargetPosition);
+        telemetry.addData("Lifter Current (mA)",
+                lifter.getCurrent(CurrentUnit.MILLIAMPS));
         //telemetryM.debug("position", follower.getPose());
         //telemetryM.debug("velocity", follower.getVelocity());
         //telemetryM.debug("automatedDrive", automatedDrive);

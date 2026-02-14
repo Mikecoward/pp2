@@ -79,7 +79,12 @@ This allows defining all paths/poses in Blue coordinates and automatically mirro
 
 #### Supporting Classes
 - **ActionScheduler**: Priority queue-based time scheduler for delayed actions
+  - `inMs(nowSec, delayMs, action)`: Schedule action relative to current time
+  - `atSec(dueSec, action)`: Schedule action at absolute time
+  - Call `update(nowSec)` each loop to execute due actions
 - **PoseStorage**: Static storage for current robot pose (shared between auto and teleop)
+- **SRSHub**: Custom I2C device driver for SRS Hub hardware (address 0x57)
+  - Supports analog/digital inputs, encoders, and I2C bus expansion
 - **Constants**: Pedro Pathing configuration (in `pedroPathing/` subdirectory)
 - **Tuning**: Pedro Pathing tuning OpMode with telemetry
 - **PathFactory**: Path generation utilities
@@ -141,7 +146,7 @@ OpModes use annotations to appear in the Driver Station:
 Active OpModes:
 - Teleop: "Cat Bot Teleop RED" / "Cat Bot Teleop BLUE"
 - Autonomous: "CatBot Auto RED" / "CatBot Auto BLUE"
-- Testing: "Catapult Test" (teleop), "Tuning" (Pedro Pathing)
+- Testing: "Catapult Test", "HubTest" (SRSHub testing), "ServoTest", "Tuning" (Pedro Pathing)
 
 ## Development Notes
 
@@ -159,8 +164,9 @@ Uses Gradle wrapper (`./gradlew`). Build configuration split across:
 - `TeamCode/build.gradle`: Team-specific customizations
 
 ### Git Workflow
-Current branch: `main`
-The repository contains staged changes to `BaseCatBotTeleop.java` and `Constants.java`.
+- Main branch: `main`
+- FTC SDK is maintained in the base repository and should not be modified
+- All team-specific changes go in the `TeamCode` module
 
 ### Code Style
 - Uses `@Configurable` annotation from bylazar.configurables for runtime tuning

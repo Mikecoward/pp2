@@ -11,9 +11,15 @@ public class HubTest extends LinearOpMode {
         // All ports default to NONE, buses default to empty
         SRSHub.Config config = new SRSHub.Config();
 
-
+        // First VL53L5CX sensor on bus 1
         config.addI2CDevice(
             1,
+            new SRSHub.VL53L5CX(SRSHub.VL53L5CX.Resolution.GRID_4x4)
+        );
+
+        // Second VL53L5CX sensor on bus 2
+        config.addI2CDevice(
+            2,
             new SRSHub.VL53L5CX(SRSHub.VL53L5CX.Resolution.GRID_4x4)
         );
 
@@ -49,20 +55,24 @@ public class HubTest extends LinearOpMode {
                 telemetry.addLine("srshub disconnected");
             } else {
 
-                SRSHub.VL53L5CX lidar = hub.getI2CDevice(
+                // Read first sensor on bus 1
+                SRSHub.VL53L5CX lidar1 = hub.getI2CDevice(
                     1,
                     SRSHub.VL53L5CX.class
                 );
 
-                if (!lidar.disconnected) {
-                    telemetry.addData(
-                        "Lidar Device",
-                        lidar.toString()
-                    );
+                // Read second sensor on bus 2
+                SRSHub.VL53L5CX lidar2 = hub.getI2CDevice(
+                    2,
+                    SRSHub.VL53L5CX.class
+                );
 
+                // Display first sensor
+                telemetry.addLine("=== SENSOR 1 (Bus 1) ===");
+                if (!lidar1.disconnected) {
                     telemetry.addData(
-                            "Lidar Resolution",
-                            lidar.distances.length == 16 ? "4x4" : "8x8"
+                            "Resolution",
+                            lidar1.distances.length == 16 ? "4x4" : "8x8"
                     );
 
                     // Show 4 rows of LIDAR distances, 4 per row
@@ -70,11 +80,35 @@ public class HubTest extends LinearOpMode {
                         StringBuilder rowData = new StringBuilder();
                         for (int col = 0; col < 4; col++) {
                             int index = row * 4 + col;
-                            rowData.append(String.format("%4d ", lidar.distances[index]));
+                            rowData.append(String.format("%4d ", lidar1.distances[index]));
                         }
-                        telemetry.addData("Row " + row, rowData.toString());
+                        telemetry.addData("S1 Row " + row, rowData.toString());
                     }
+                } else {
+                    telemetry.addLine("Sensor 1 DISCONNECTED");
+                }
 
+                telemetry.addLine();
+
+                // Display second sensor
+                telemetry.addLine("=== SENSOR 2 (Bus 2) ===");
+                if (!lidar2.disconnected) {
+                    telemetry.addData(
+                            "Resolution",
+                            lidar2.distances.length == 16 ? "4x4" : "8x8"
+                    );
+
+                    // Show 4 rows of LIDAR distances, 4 per row
+                    for (int row = 0; row < 4; row++) {
+                        StringBuilder rowData = new StringBuilder();
+                        for (int col = 0; col < 4; col++) {
+                            int index = row * 4 + col;
+                            rowData.append(String.format("%4d ", lidar2.distances[index]));
+                        }
+                        telemetry.addData("S2 Row " + row, rowData.toString());
+                    }
+                } else {
+                    telemetry.addLine("Sensor 2 DISCONNECTED");
                 }
             }
 
