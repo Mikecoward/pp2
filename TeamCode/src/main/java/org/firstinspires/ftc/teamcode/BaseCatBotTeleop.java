@@ -43,8 +43,8 @@ public abstract class BaseCatBotTeleop extends OpMode {
 
     // --- Original members ---
     protected Follower follower;
-    int upperlimit = 4500;
-    int lowerlimit = -4500;
+    int upperlimit = 0;
+    int lowerlimit = -1280;
     protected boolean automatedDrive;
     protected AutoTarget currentAutoTarget = AutoTarget.NONE;
     boolean robotCentric = false;
@@ -60,7 +60,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
             new Pose(30,   90,    Math.toRadians(-180)) //
     };
     protected int lifterTargetPosition = 0;
-    protected static final int LIFTER_INCREMENT_TICKS = 25;
+    protected static final int LIFTER_INCREMENT_TICKS = 10;
     // Alliance-specific poses (computed at init)
     protected Pose[] poseArray;
 
@@ -282,18 +282,23 @@ public abstract class BaseCatBotTeleop extends OpMode {
 
             // DPad Right - Increase lifter position
             if (gamepad1.dpad_right) {
-                lifterTargetPosition += LIFTER_INCREMENT_TICKS;
+                lifterTargetPosition -= 1200;
                 ///lifterTargetPosition = upperlimit;
             }
 
             if (gamepad1.dpad_left) {
-                lifterTargetPosition -= LIFTER_INCREMENT_TICKS;
+                lifterTargetPosition += 1200;
                 ///lifterTargetPosition = lowerlimit;
+            }
+
+            if (gamepad2.dpad_left) {
+                lowerlimit += LIFTER_INCREMENT_TICKS;
+                upperlimit += LIFTER_INCREMENT_TICKS;
+                lifterTargetPosition += LIFTER_INCREMENT_TICKS;
+
             }
             lifterTargetPosition = Math.max(lifterTargetPosition,  lowerlimit);
             lifterTargetPosition = Math.min(lifterTargetPosition,  upperlimit);
-
-
             lifter.setTargetPosition(lifterTargetPosition);
         }
 
