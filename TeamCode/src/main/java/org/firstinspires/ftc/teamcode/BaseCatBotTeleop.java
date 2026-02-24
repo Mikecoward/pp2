@@ -104,7 +104,7 @@ public abstract class BaseCatBotTeleop extends OpMode {
 
     protected double CATAPULT_UP_POWER = 1;
     protected double CATAPULT_DOWN_POWER = -1;
-    protected double CATAPULT_HOLD_DOWN_POWER = 0.0;
+    protected double CATAPULT_HOLD_DOWN_POWER = -0.1;
 
     protected double catstrengthPosition = 0.75;
     protected static final double CATSTRENGTH_MIN_POSITION = 0.25;
@@ -311,6 +311,11 @@ public abstract class BaseCatBotTeleop extends OpMode {
         telemetry.addData("Lifter Target", lifterTargetPosition);
         telemetry.addData("Lifter Current (mA)",
                 lifter.getCurrent(CurrentUnit.MILLIAMPS));
+        telemetry.addData("Cat1 Current (mA)",
+                catapult1.getCurrent(CurrentUnit.MILLIAMPS));
+        telemetry.addData("Cat2 Current (mA)",
+                catapult2.getCurrent(CurrentUnit.MILLIAMPS));
+
         //telemetryM.debug("position", follower.getPose());
         //telemetryM.debug("velocity", follower.getVelocity());
         //telemetryM.debug("automatedDrive", automatedDrive);

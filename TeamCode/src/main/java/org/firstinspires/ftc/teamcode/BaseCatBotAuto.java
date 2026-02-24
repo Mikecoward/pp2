@@ -119,7 +119,7 @@ public abstract class BaseCatBotAuto extends OpMode {
 
     protected double CATAPULT_UP_POWER = -1;
     protected double CATAPULT_DOWN_POWER = 1;
-    protected double CATAPULT_HOLD_DOWN_POWER = 0.0;
+    protected double CATAPULT_HOLD_DOWN_POWER = 0.1;
 
     protected double footPosition = 0.0;
     protected double FOOT_UP_POSITION = 0.2;
